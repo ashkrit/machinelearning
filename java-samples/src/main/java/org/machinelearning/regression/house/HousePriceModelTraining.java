@@ -8,6 +8,7 @@ import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.regression.LinearModel;
 import smile.regression.OLS;
+import smile.regression.Regression;
 
 import java.io.*;
 import java.net.URL;
@@ -21,7 +22,7 @@ public class HousePriceModelTraining {
         URL u = HousePriceModelTraining.class.getResource("/houseprice/data.csv");
         Path p = Paths.get(u.toURI());
 
-        System.out.println(p);
+        System.out.println("Reading input file from " + p);
 
         Function<String, Path> pipeline = read
                 .andThen(dropCols)
@@ -78,7 +79,7 @@ public class HousePriceModelTraining {
     };
 
 
-    static Function<LinearModel, Path> saveModel = model -> {
+    static Function<Regression, Path> saveModel = model -> {
         try {
             File tempFile = File.createTempFile("house_", "_model");
             FileOutputStream fos = new FileOutputStream(tempFile);

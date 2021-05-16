@@ -17,31 +17,42 @@ public class HousePricePredication {
     public static void main(String[] args) throws Exception {
         Path path = Paths.get(args[0]);
 
-        System.out.println("Loading model from " + path);
-        FileInputStream fin = new FileInputStream(path.toFile());
-        ObjectInputStream ins = new ObjectInputStream(fin);
-        LinearModel housePredication = (LinearModel) ins.readObject();
-        System.out.println("Model file loaded ");
-
+        LinearModel housePredication = loadModel(path);
         System.out.println(housePredication);
 
-        //335000.0,2.0,2.0,1350,2560,1.0,0,0,3,1350,0,1976,0
+        String example = "335000.0,2.0,2.0,1350,2560,1.0,0,0,3,1350,0,1976,0";
         StructType scoreSchema = createScoreSchema();
         System.out.println("input features " + Arrays.asList(scoreSchema.fields()).stream().skip(1).collect(Collectors.toList()));
+        System.out.println("Eg " + example);
 
 
         new BufferedReader(new InputStreamReader(System.in))
                 .lines()
                 .filter(line -> !line.trim().isEmpty())
                 .map(line -> line.split(","))
-                .map(row -> Arrays.asList(row).stream().mapToDouble(Double::parseDouble).toArray())
+                .map(row -> toDouble(row))
                 .map(vector -> Tuple.of(vector, createScoreSchema()))
-                .forEach(features -> {
-                    double housePrice = housePredication.predict(features);
-                    System.out.println(String.format("Expected price of house is %s", housePrice));
-                });
+                .forEach(features -> predict(housePredication, features));
 
 
+    }
+
+    private static double[] toDouble(String[] row) {
+        return Arrays.asList(row).stream().mapToDouble(Double::parseDouble).toArray();
+    }
+
+    private static void predict(LinearModel housePredication, Tuple features) {
+        double housePrice = housePredication.predict(features);
+        System.out.println(String.format("Expected price of house is %s", housePrice));
+    }
+
+    private static LinearModel loadModel(Path path) throws IOException, ClassNotFoundException {
+        System.out.println("Loading model from " + path);
+        FileInputStream fin = new FileInputStream(path.toFile());
+        ObjectInputStream ins = new ObjectInputStream(fin);
+        LinearModel housePredication = (LinearModel) ins.readObject();
+        System.out.println("Model file loaded ");
+        return housePredication;
     }
 
     private static StructType createScoreSchema() {
